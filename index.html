@@ -1,547 +1,215 @@
-```react
-import React, { useState, useEffect, useMemo } from 'react';
-import { Shield, AlertTriangle, EyeOff, Users, Ghost, ChevronLeft, Lock, Skull, Zap, Biohazard, Activity, Search, MapPin, Terminal, Radio, Target, Crosshair, AlertCircle, Waves, Flame, BookOpen, Info } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEZR | Global Exclusion Zone Registry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,800;1,400;1,800&display=swap');
+        
+        body {
+            background-color: black;
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            overflow: hidden;
+        }
 
-const App = () => {
-  const [currentPage, setCurrentPage] = useState('login'); 
-  const [selectedIsland, setSelectedIsland] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [glitch, setGlitch] = useState(false);
-  const [bootSequence, setBootSequence] = useState([]);
-  const [jitter, setJitter] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'protocols'
-
-  const DANGER_LEVELS = {
-    SAFE: { 
-      label: 'SAFE', 
-      color: 'bg-zinc-800 text-zinc-400', 
-      desc: 'Zone is stable. Minimal risk to life. Observation via satellite only.' 
-    },
-    MILD: { 
-      label: 'MILD', 
-      color: 'bg-zinc-700 text-zinc-100', 
-      desc: 'Known hazards present. Standard protective gear required for perimeter transit.' 
-    },
-    MODERATE: { 
-      label: 'MODERATE', 
-      color: 'bg-white text-black font-bold', 
-      desc: 'Active threat environment. 50% mortality rate for unguided incursions.' 
-    },
-    DANGER: { 
-      label: 'DANGER', 
-      color: 'bg-white text-black animate-pulse font-black', 
-      desc: 'Extreme lethal risk. Hostile entities or environment. No rescue possible.' 
-    },
-    UNLIKE: { 
-      label: 'UNLIKE', 
-      color: 'bg-black text-white border-white border', 
-      desc: 'Biological or physics-defying conditions. Human presence triggers immediate escalation.' 
-    },
-    RESTRICTED: { 
-      label: 'RESTRICTED', 
-      color: 'bg-white text-black ring-2 ring-black outline outline-1 outline-white font-black', 
-      desc: 'Military blockade active. Kill-on-sight authorization for all unauthorized vessels.' 
-    }
-  };
-
-  const CLASSIFICATIONS = {
-    WEIRD: { 
-      icon: Ghost, 
-      label: 'PHENO-WEIRD', 
-      color: 'text-purple-400', 
-      desc: 'Psychological or paracausal effects. Time-dilation or auditory hallucinations.' 
-    },
-    ANOMALY: { 
-      icon: Activity, 
-      label: 'ANOMALOUS', 
-      color: 'text-blue-400', 
-      desc: 'Violation of known laws of physics. Magnetic or gravitational distortions.' 
-    },
-    HUMAN: { 
-      icon: Users, 
-      label: 'HOSTILE-CIV', 
-      color: 'text-green-400', 
-      desc: 'Aggressive indigenous or insurgent populations with total isolation policies.' 
-    },
-    RADIOACTIVE: { 
-      icon: Zap, 
-      label: 'ISOTOPIC', 
-      color: 'text-yellow-400', 
-      desc: 'High concentration of ionizing radiation. Long-term genetic degradation.' 
-    },
-    BIOLOGICAL: { 
-      icon: Biohazard, 
-      label: 'BIO-HAZARD', 
-      color: 'text-red-400', 
-      desc: 'Presence of weaponized pathogens, toxic flora, or predatory megafauna.' 
-    },
-    UNKNOWN: { 
-      icon: EyeOff, 
-      label: 'NULL-CLASS', 
-      color: 'text-zinc-500', 
-      desc: 'Nature of threat is currently unverified. Data black-hole.' 
-    }
-  };
-
-  const ISLANDS = [
-    { 
-        id: 'G-001', 
-        name: 'North Sentinel', 
-        coords: '11.55° N, 92.23° E', 
-        danger: 'RESTRICTED', 
-        type: 'HUMAN', 
-        summary: '60,000 years of total isolation.', 
-        detail: 'Total denial of external contact. Indigenous hostility confirmed via satellite. No-fly zone active.',
-        incident: '2018: Missionary John Chau killed upon beaching. 2006: Two poachers killed while sleeping. Sentinelese arrows have been found to contain an unknown paralytic compound not found in local flora.'
-    },
-    { 
-        id: 'G-002', 
-        name: 'Poveglia', 
-        coords: '45.38° N, 12.33° E', 
-        danger: 'DANGER', 
-        type: 'WEIRD', 
-        summary: 'Plague pit and psychic residue.', 
-        detail: 'Island composed of 50% human ash. High EM interference prevents digital recording.',
-        incident: '1920s: Asylum director reported "the soil is screaming" before leaping to his death. 2014: Five American tourists rescued; all diagnosed with identical persistent paranoid schizophrenia within 48 hours.'
-    },
-    { 
-        id: 'G-003', 
-        name: 'Vozrozhdeniya', 
-        coords: '45.15° N, 59.27° E', 
-        danger: 'UNLIKE', 
-        type: 'BIOLOGICAL', 
-        summary: 'Soviet Bioweapon proving ground.', 
-        detail: 'Former island, now a land-bridge. Massive quantities of weaponized Anthrax buried in pits.',
-        incident: '1971: Aral Smallpox Outbreak. A research vessel drifted too close; the resulting outbreak killed 3 and required the quarantine of 50,000 people. Spores remain 99% viable in the topsoil.'
-    },
-    { 
-        id: 'G-004', 
-        name: 'Ramree Island', 
-        coords: '19.03° N, 93.85° E', 
-        danger: 'DANGER', 
-        type: 'BIOLOGICAL', 
-        summary: 'Hyper-aggressive crocodile concentration.', 
-        detail: 'Swamp ecosystem dominated by apex predators. Survival probability near zero.',
-        incident: '1945: During the Battle of Ramree, nearly 500 soldiers vanished into the swamps in a single night. Records describe "thousands of eyes" in the dark. No remains were ever recovered.'
-    },
-    { 
-        id: 'G-005', 
-        name: 'Hashima', 
-        coords: '32.62° N, 129.73° E', 
-        danger: 'MILD', 
-        type: 'HUMAN', 
-        summary: 'The concrete ghost battleship.', 
-        detail: 'Abandoned undersea coal mine. Structural integrity at 12%. High risk of total collapse.',
-        incident: '1974: Sudden evacuation order issued; reasons remain classified. 2009: Explorers found "fresh" food in a canteen that had been sealed for 30 years. No biological decay was present.'
-    },
-    { 
-        id: 'G-006', 
-        name: 'Snake Island', 
-        coords: '24.48° S, 46.67° W', 
-        danger: 'UNLIKE', 
-        type: 'BIOLOGICAL', 
-        summary: 'Home of the Golden Lancehead.', 
-        detail: 'Snake density of 1 per square meter. Venom causes systematic organ failure and tissue melting.',
-        incident: '1920: Lighthouse family found dead. The father was bitten while checking the light; the family was intercepted by vipers while fleeing to the boat. The light was dark for 3 weeks before discovery.'
-    },
-    { 
-        id: 'G-007', 
-        name: 'Palmyra Atoll', 
-        coords: '5.88° N, 162.08° W', 
-        danger: 'DANGER', 
-        type: 'WEIRD', 
-        summary: 'Localized natural malignancy.', 
-        detail: 'Consistently reported "aura of evil" by all visitors. Food spoilage occurs in minutes.',
-        incident: '1974: Sea Wind murders. A couple was found murdered; the survivor claimed the island "commanded" the act. Modern GEZR sensors show the island emits a low-frequency hum that induces homicidal ideation.'
-    },
-    { 
-        id: 'G-008', 
-        name: 'Lake Karachay', 
-        coords: '55.67° N, 60.79° E', 
-        danger: 'UNLIKE', 
-        type: 'RADIOACTIVE', 
-        summary: 'The most polluted place on Earth.', 
-        detail: 'Open-air reservoir of nuclear waste. Standing on the shore provides a fatal dose in 60 minutes.',
-        incident: '1967: Drought dried the lake; wind blew radioactive dust over 1,800 miles, irradiating 500,000 people. The "lake" is now capped with 10,000 hollow concrete blocks to suppress the dust.'
-    },
-    { 
-        id: 'G-009', 
-        name: 'Bouvet Island', 
-        coords: '54.42° S, 3.35° E', 
-        danger: 'MODERATE', 
-        type: 'UNKNOWN', 
-        summary: 'The world\'s loneliest island.', 
-        detail: '93% glacier coverage. Unexplained lifeboat found in 1964 with no signs of human life.',
-        incident: '1979: The Vela Incident. A massive double-flash of light (nuclear signature) detected by satellites. No country claimed the test. Subsequent expeditions found the ice had "crystallized" into a obsidian-like state.'
-    },
-    { 
-        id: 'G-010', 
-        name: 'The Silent Zone', 
-        coords: '26.71° N, 103.73° W', 
-        danger: 'DANGER', 
-        type: 'ANOMALY', 
-        summary: 'Total radio signal absorption.', 
-        detail: 'Point of meteorite convergence. Compasses rotate 360 degrees constantly.',
-        incident: '1970: Athena Rocket crash. A NASA rocket veered hundreds of miles off course, seemingly "pulled" down by the desert. Recovery teams reported they could hear each other\'s thoughts, but not voices.'
-    },
-    { 
-        id: 'G-011', 
-        name: 'Fort Carroll', 
-        coords: '39.21° N, 76.51° W', 
-        danger: 'MILD', 
-        type: 'HUMAN', 
-        summary: 'Sinking hexagonal fortress.', 
-        detail: 'Abandoned sea fort. Heavily reclaimed by avian life. Lead and mercury contamination.',
-        incident: '2002: Urban explorers found a "second basement" not present in the 1847 blueprints. Within it was a radio transmitter still broadcasting a series of 12 numbers on a loop since 1918.'
-    },
-    { 
-        id: 'G-012', 
-        name: 'Bikini Atoll', 
-        coords: '11.62° N, 165.38° E', 
-        danger: 'RESTRICTED', 
-        type: 'RADIOACTIVE', 
-        summary: 'Nuclear test fallout zone.', 
-        detail: 'Site of 23 nuclear detonations. Topsoil is entirely radioactive isotopes.',
-        incident: '1954: Castle Bravo. The 15-megaton blast was 3x larger than predicted. The "ashes of death" fell on 23 Japanese fishermen, causing systemic radiation sickness and the first recorded "atomic death".'
-    },
-    { 
-        id: 'G-013', 
-        name: 'Okinoshima', 
-        coords: '34.24° N, 130.10° E', 
-        danger: 'MODERATE', 
-        type: 'WEIRD', 
-        summary: 'Men-only sacred taboo zone.', 
-        detail: 'Strict religious exclusion. No items may be removed; no one may speak of what they saw.',
-        incident: '17th Century: Legend tells of a merchant who stole a small stone. His entire fleet sank in calm waters. GEZR magnetic scans indicate the island possesses a "core" that reacts to biological presence.'
-    },
-    { 
-        id: 'G-014', 
-        name: 'The Devil\'s Kettle', 
-        coords: '47.83° N, 90.04° W', 
-        danger: 'SAFE', 
-        type: 'ANOMALY', 
-        summary: 'Hydrological vanishing point.', 
-        detail: 'A river splits; half falls into a pothole and never returns to the surface.',
-        incident: '1990s: Researchers dumped 500 ping-pong balls and gallons of dye into the hole. GPS trackers were also used. None of the items ever emerged in Lake Superior or any connected waterway.'
-    },
-    { 
-        id: 'G-015', 
-        name: 'Farallon Islands', 
-        coords: '37.69° N, 123.00° W', 
-        danger: 'RESTRICTED', 
-        type: 'RADIOACTIVE', 
-        summary: 'The Nuclear Graveyard.', 
-        detail: '47,500 barrels of radioactive waste dumped. Seal and shark population showing 40% mutation rate.',
-        incident: '1950: A barrel was accidentally crushed during dumping, venting a blue gas. The entire crew of the USS Southard reported "metallic taste" and died of leukemia within 5 years. Access is now Navy-only.'
-    }
-  ];
-
-  const RadarGrid = ({ coords }) => (
-    <div className="relative w-full h-full bg-[#050505] flex items-center justify-center overflow-hidden border-2 border-white/40">
-      <div className="absolute inset-0 opacity-20" 
-           style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
-      </div>
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="relative mb-6">
-           <div className="absolute -top-8 -left-8 w-6 h-6 border-t-2 border-l-2 border-white"></div>
-           <div className="absolute -top-8 -right-8 w-6 h-6 border-t-2 border-r-2 border-white"></div>
-           <div className="absolute -bottom-8 -left-8 w-6 h-6 border-b-2 border-l-2 border-white"></div>
-           <div className="absolute -bottom-8 -right-8 w-6 h-6 border-b-2 border-r-2 border-white"></div>
-           <Crosshair size={64} className="text-white/20 animate-spin-slow" strokeWidth={0.5} />
-           <div className="absolute inset-0 flex items-center justify-center">
-              <MapPin size={24} className="text-white animate-bounce" />
-           </div>
-        </div>
-        <div className="bg-white text-black px-4 py-1 text-[12px] font-black tracking-widest italic animate-pulse">
-           FIXED: {coords}
-        </div>
-      </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent h-1/2 w-full animate-radar-sweep pointer-events-none"></div>
-    </div>
-  );
-
-  const filteredIslands = useMemo(() => {
-    return ISLANDS.filter(i => 
-      i.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      i.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
-
-  useEffect(() => {
-    const glitchInterval = setInterval(() => {
-      setGlitch(true);
-      setTimeout(() => setGlitch(false), 120);
-    }, 4500);
-    const jitterInterval = setInterval(() => {
-      setJitter(true);
-      setTimeout(() => setJitter(false), 80);
-    }, 3000);
-    return () => {
-      clearInterval(glitchInterval);
-      clearInterval(jitterInterval);
-    };
-  }, []);
-
-  const startBoot = () => {
-    const lines = [
-      "INITIALIZING GEZR-KERNEL...",
-      "GLOBAL EXCLUSION ZONE REGISTRY V2.0",
-      "LOADING 15 ENTITY FILES...",
-      "POPULATING PROTOCOL LEGENDS...",
-      "TERMINAL READY."
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-      setBootSequence(prev => [...prev, lines[i]]);
-      i++;
-      if (i === lines.length) {
-        clearInterval(interval);
-        setTimeout(() => setCurrentPage('home'), 800);
-      }
-    }, 400);
-  };
-
-  if (currentPage === 'login') {
-    return (
-      <div className="h-screen bg-black text-white flex flex-col items-center justify-center p-6 font-mono uppercase overflow-hidden">
-        <div className={`z-10 flex flex-col items-center gap-10 max-w-lg w-full text-center transition-transform duration-75 ${jitter ? 'translate-x-3' : ''}`}>
-          <div className="w-24 h-24 border-4 border-white flex items-center justify-center">
-            <Lock size={48} className={bootSequence.length > 0 ? "animate-spin" : "animate-pulse"} />
-          </div>
-          
-          <div className={glitch ? 'skew-x-12 opacity-50' : ''}>
-            <h1 className="text-8xl font-black tracking-tighter italic">GEZR</h1>
-            <div className="relative mt-2">
-                <div className="h-0.5 w-full bg-white/20"></div>
-                <p className="text-white/70 text-[11px] font-black tracking-[0.45em] py-2">GLOBAL EXCLUSION ZONE REGISTRY</p>
-                <div className="h-0.5 w-full bg-white/20"></div>
-            </div>
-          </div>
-
-          {bootSequence.length === 0 ? (
-            <button onClick={startBoot} className="w-full border-4 border-white py-6 bg-black hover:bg-white hover:text-black transition-all font-black text-2xl tracking-[0.4em] active:scale-95">
-              ACCESS REGISTRY
-            </button>
-          ) : (
-            <div className="w-full text-left bg-zinc-900 border-2 border-white p-4 h-40 overflow-hidden shadow-inner">
-               {bootSequence.map((line, idx) => (
-                 <div key={idx} className="text-[10px] text-green-500 mb-1 font-bold">{'>'} {line}</div>
-               ))}
-               <div className="w-2 h-4 bg-green-500 animate-pulse inline-block"></div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`h-screen bg-black text-white font-mono flex flex-col relative overflow-hidden transition-all duration-75 ${glitch ? 'translate-x-1 skew-x-3 opacity-90' : ''}`}>
-      
-      <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.1] vhs-texture"></div>
-      <div className="fixed inset-0 pointer-events-none z-[101] scanline"></div>
-
-      <header className="shrink-0 h-20 border-b-4 border-white flex items-center justify-between px-6 bg-black z-20">
-        <div className="flex items-center gap-6">
-          <div className="bg-white p-2"><Skull size={24} className="text-black" /></div>
-          <div>
-            <h1 className="text-3xl font-black tracking-tighter uppercase italic leading-none">GEZR</h1>
-            <p className="text-[9px] font-black tracking-[0.2em] text-white/40 mt-1">GLOBAL EXCLUSION ZONE REGISTRY</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-            <button 
-                onClick={() => setViewMode('list')}
-                className={`px-4 py-2 text-[10px] font-black border-2 transition-all ${viewMode === 'list' ? 'bg-white text-black border-white' : 'border-white/20 text-white/40 hover:border-white hover:text-white'}`}
-            >
-                REGISTRY
-            </button>
-            <button 
-                onClick={() => setViewMode('protocols')}
-                className={`px-4 py-2 text-[10px] font-black border-2 transition-all ${viewMode === 'protocols' ? 'bg-white text-black border-white' : 'border-white/20 text-white/40 hover:border-white hover:text-white'}`}
-            >
-                PROTOCOLS
-            </button>
-        </div>
-      </header>
-
-      {viewMode === 'list' ? (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {currentPage === 'home' && (
-            <div className="h-full flex flex-col animate-in fade-in">
-              <div className="p-4 border-b-2 border-white">
-                <div className="flex items-center gap-3 bg-zinc-900 border-2 border-white/30 px-4 py-3 focus-within:border-white transition-colors">
-                  <Search size={18} className="text-white/40" />
-                  <input 
-                    type="text" 
-                    placeholder="SEARCH ENCRYPTED REGISTRY..." 
-                    className="bg-transparent outline-none text-xs w-full text-white font-black uppercase"
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                {filteredIslands.map((island) => (
-                  <button
-                    key={island.id}
-                    onClick={() => { setSelectedIsland(island); setCurrentPage('dossier'); }}
-                    className="w-full text-left p-6 border-4 border-white/10 hover:border-white bg-black hover:bg-white hover:text-black transition-all group relative overflow-hidden"
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[10px] font-black opacity-40">{island.id}</span>
-                      <div className="flex gap-2">
-                          <span className={`text-[9px] px-2 py-0.5 font-bold border border-current ${CLASSIFICATIONS[island.type].color}`}>{CLASSIFICATIONS[island.type].label}</span>
-                          <span className={`text-[9px] px-2 py-0.5 font-black uppercase ${DANGER_LEVELS[island.danger].color}`}>{island.danger}</span>
-                      </div>
-                    </div>
-                    <h3 className="font-black text-4xl uppercase tracking-tighter italic group-hover:translate-x-4 transition-transform">{island.name}</h3>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {currentPage === 'dossier' && selectedIsland && (
-            <div className="h-full flex flex-col bg-black overflow-hidden animate-in slide-in-from-right">
-              <div className="shrink-0 h-16 border-b-2 border-white/20 flex items-center px-6 justify-between">
-                <button onClick={() => setCurrentPage('home')} className="flex items-center gap-2 font-black uppercase text-[10px] hover:bg-white hover:text-black px-4 py-1 border border-white transition-all">
-                  <ChevronLeft size={14} /> BACK_TO_LIST
-                </button>
-                <div className="text-[10px] font-black italic text-white/40">ARCHIVE_REF: {selectedIsland.id}</div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar">
-                <div className="max-w-6xl mx-auto space-y-12 pb-24">
-                  <div className="flex flex-col lg:flex-row gap-12 items-start">
-                    <div className="w-full lg:w-[400px] aspect-square relative border-2 border-white/20"><RadarGrid coords={selectedIsland.coords} /></div>
-                    <div className="flex-1 space-y-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-1 bg-white"></div>
-                        <span className="text-[11px] font-black text-white/40 tracking-[0.5em] uppercase">ENTITY_DATA_REF: {selectedIsland.id}</span>
-                      </div>
-                      <h2 className="text-7xl md:text-9xl font-black uppercase tracking-tighter leading-[0.8] italic">{selectedIsland.name}</h2>
-                      <div className="flex gap-4">
-                        <div className={`px-6 py-2 border-4 border-white inline-block text-sm font-black uppercase ${CLASSIFICATIONS[selectedIsland.type].color}`}>
-                          {CLASSIFICATIONS[selectedIsland.type].label}
-                        </div>
-                        <div className={`px-6 py-2 border-4 border-white inline-block text-sm font-black uppercase ${DANGER_LEVELS[selectedIsland.danger].color}`}>
-                          DANGER: {selectedIsland.danger}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-12 border-t-2 border-white/20 pt-12">
-                    <section>
-                        <h4 className="text-[11px] font-black text-white/30 tracking-[0.4em] uppercase mb-6">SUMMARY</h4>
-                        <p className="text-3xl md:text-5xl font-black leading-tight italic border-l-8 border-white pl-8 uppercase">{selectedIsland.summary}</p>
-                    </section>
-                    <section className="bg-zinc-900 p-8 border-2 border-white/20">
-                        <h4 className="text-[11px] font-black text-white/30 tracking-[0.4em] uppercase mb-4 flex items-center gap-2"><Terminal size={14} /> FIELD_ANALYSIS</h4>
-                        <p className="text-base text-zinc-300 font-bold uppercase mb-8">{selectedIsland.detail}</p>
-                        <div className="border-t border-white/10 pt-6">
-                            <h4 className="text-[11px] font-black text-red-500 tracking-[0.4em] uppercase mb-3">INCIDENT_LOG</h4>
-                            <div className="text-sm text-zinc-400 font-bold uppercase italic leading-relaxed bg-black/40 p-4 border border-white/5">{selectedIsland.incident}</div>
-                        </div>
-                    </section>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar animate-in zoom-in">
-            <div className="max-w-6xl mx-auto space-y-16 pb-24">
-                <section>
-                    <div className="flex items-center gap-4 mb-10">
-                        <div className="w-12 h-2 bg-white"></div>
-                        <h2 className="text-6xl font-black tracking-tighter italic uppercase">Threat Protocols</h2>
-                    </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Object.entries(DANGER_LEVELS).map(([key, info]) => (
-                            <div key={key} className="border-2 border-white/10 p-6 hover:border-white transition-all bg-zinc-900/40">
-                                <span className={`text-[11px] px-4 py-1 font-black inline-block mb-4 uppercase ${info.color}`}>
-                                    {key}
-                                </span>
-                                <p className="text-xs font-bold text-zinc-400 leading-relaxed uppercase italic">
-                                    {info.desc}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                <section>
-                    <div className="flex items-center gap-4 mb-10">
-                        <div className="w-12 h-2 bg-white"></div>
-                        <h2 className="text-6xl font-black tracking-tighter italic uppercase">Entity Class</h2>
-                    </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Object.entries(CLASSIFICATIONS).map(([key, info]) => {
-                            const Icon = info.icon;
-                            return (
-                                <div key={key} className="border-2 border-white/10 p-6 hover:border-white transition-all bg-zinc-900/40">
-                                    <div className={`flex items-center gap-3 mb-4 ${info.color}`}>
-                                        <Icon size={20} />
-                                        <span className="text-[11px] font-black uppercase tracking-widest">{info.label}</span>
-                                    </div>
-                                    <p className="text-xs font-bold text-zinc-400 leading-relaxed uppercase italic">
-                                        {info.desc}
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </section>
-
-                <div className="border-4 border-white p-8 bg-white text-black">
-                    <div className="flex items-start gap-8">
-                        <Info size={48} className="shrink-0" />
-                        <div>
-                            <h5 className="text-2xl font-black uppercase tracking-tighter italic mb-2">Notice of Exclusion</h5>
-                            <p className="text-xs font-bold uppercase leading-relaxed">
-                                Protocols listed here are binding under Global Maritime Law and the GEZR Mandate. Any entity encountered within an exclusion zone marked "UNLIKE" or "RESTRICTED" is to be considered hostile or non-human. Communication attempts are strictly prohibited without Level_4 clearance.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-      )}
-
-      <footer className="shrink-0 h-10 border-t-4 border-white bg-black flex items-center justify-between px-6 text-[9px] font-black uppercase tracking-[0.5em] text-white/40 z-[110]">
-        <div className="flex gap-8">
-          <span className="flex items-center gap-2"><div className="w-2 h-2 bg-white animate-pulse"></div> SAT_FEED_ACTIVE</span>
-          <span>LATENCY: 2MS</span>
-        </div>
-        <div className="hidden xs:block italic">GEZR: GLOBAL EXCLUSION ZONE REGISTRY // SECURITY CLEARANCE REQUIRED</div>
-      </footer>
-
-      <style dangerouslySetInnerHTML={{ __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #000; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #fff; }
+        
         .vhs-texture {
-          background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%), linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
-          background-size: 100% 2px, 3px 100%;
+            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%), 
+                        linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            opacity: 0.15;
         }
+
         .scanline {
-          width: 100%; height: 100px; z-index: 102;
-          background: linear-gradient(0deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
-          position: absolute; bottom: 100%; animation: scan 4s linear infinite;
+            width: 100%; height: 100px; z-index: 102;
+            background: linear-gradient(0deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+            position: absolute; bottom: 100%; animation: scan 4s linear infinite;
         }
+
         @keyframes scan { 0% { bottom: 100%; } 100% { bottom: -100px; } }
         @keyframes radar-sweep { 0% { transform: translateY(-100%); } 100% { transform: translateY(200%); } }
-        .animate-radar-sweep { animation: radar-sweep 2.5s linear infinite; }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .animate-radar-sweep { animation: radar-sweep 2.5s linear infinite; }
         .animate-spin-slow { animation: spin-slow 8s linear infinite; }
-      `}} />
-    </div>
-  );
-};
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-export default App;
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        
+        // Define icons as components since we aren't using an import system
+        const Icon = ({ name, size = 24, className = "" }) => {
+            useEffect(() => {
+                lucide.createIcons();
+            }, [name]);
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
+        };
 
-```
+        const App = () => {
+            const [currentPage, setCurrentPage] = useState('login'); 
+            const [selectedIsland, setSelectedIsland] = useState(null);
+            const [searchTerm, setSearchTerm] = useState("");
+            const [glitch, setGlitch] = useState(false);
+            const [bootSequence, setBootSequence] = useState([]);
+            const [jitter, setJitter] = useState(false);
+            const [viewMode, setViewMode] = useState('list');
+
+            const DANGER_LEVELS = {
+                SAFE: { label: 'SAFE', color: 'bg-zinc-800 text-zinc-400', desc: 'Zone is stable. Minimal risk to life.' },
+                MILD: { label: 'MILD', color: 'bg-zinc-700 text-zinc-100', desc: 'Known hazards present. Standard gear required.' },
+                MODERATE: { label: 'MODERATE', color: 'bg-white text-black font-bold', desc: 'Active threat environment.' },
+                DANGER: { label: 'DANGER', color: 'bg-white text-black animate-pulse font-black', desc: 'Extreme lethal risk.' },
+                UNLIKE: { label: 'UNLIKE', color: 'bg-black text-white border-white border', desc: 'Biological or physics-defying conditions.' },
+                RESTRICTED: { label: 'RESTRICTED', color: 'bg-white text-black ring-2 ring-black outline outline-1 outline-white font-black', desc: 'Military blockade active.' }
+            };
+
+            const CLASSIFICATIONS = {
+                WEIRD: { icon: 'ghost', label: 'PHENO-WEIRD', color: 'text-purple-400', desc: 'Psychological or paracausal effects.' },
+                ANOMALY: { icon: 'activity', label: 'ANOMALOUS', color: 'text-blue-400', desc: 'Violation of laws of physics.' },
+                HUMAN: { icon: 'users', label: 'HOSTILE-CIV', color: 'text-green-400', desc: 'Aggressive isolationist populations.' },
+                RADIOACTIVE: { icon: 'zap', label: 'ISOTOPIC', color: 'text-yellow-400', desc: 'Ionizing radiation hazards.' },
+                BIOLOGICAL: { icon: 'biohazard', label: 'BIO-HAZARD', color: 'text-red-400', desc: 'Weaponized pathogens or megafauna.' },
+                UNKNOWN: { icon: 'eye-off', label: 'NULL-CLASS', color: 'text-zinc-500', desc: 'Nature of threat unverified.' }
+            };
+
+            const ISLANDS = [
+                { id: 'G-001', name: 'North Sentinel', coords: '11.55° N, 92.23° E', danger: 'RESTRICTED', type: 'HUMAN', summary: '60,000 years of total isolation.', detail: 'Total denial of external contact. Indigenous hostility confirmed via satellite.', incident: '2018: Missionary John Chau killed upon beaching. 2006: Two poachers killed while sleeping.' },
+                { id: 'G-002', name: 'Poveglia', coords: '45.38° N, 12.33° E', danger: 'DANGER', type: 'WEIRD', summary: 'Plague pit and psychic residue.', detail: 'Island composed of 50% human ash. High EM interference.', incident: '1920s: Asylum director reported "the soil is screaming" before leaping to his death.' },
+                { id: 'G-003', name: 'Vozrozhdeniya', coords: '45.15° N, 59.27° E', danger: 'UNLIKE', type: 'BIOLOGICAL', summary: 'Soviet Bioweapon ground.', detail: 'Former island. Massive quantities of weaponized Anthrax buried in pits.', incident: '1971: Aral Smallpox Outbreak killed 3. Spores remain 99% viable in the topsoil.' },
+                { id: 'G-004', name: 'Ramree Island', coords: '19.03° N, 93.85° E', danger: 'DANGER', type: 'BIOLOGICAL', summary: 'Saltwater Croc Territory.', detail: 'Swamp ecosystem dominated by apex predators.', incident: '1945: Nearly 500 soldiers vanished into the swamps in a single night.' },
+                { id: 'G-006', name: 'Snake Island', coords: '24.48° S, 46.67° W', danger: 'UNLIKE', type: 'BIOLOGICAL', summary: 'Home of the Golden Lancehead.', detail: 'Snake density of 1 per square meter. Venom causes organ failure.', incident: '1920: Lighthouse family found dead. The light was dark for 3 weeks before discovery.' },
+                { id: 'G-008', name: 'Lake Karachay', coords: '55.67° N, 60.79° E', danger: 'UNLIKE', type: 'RADIOACTIVE', summary: 'Most polluted place on Earth.', detail: 'Nuclear waste reservoir. Fatal dose in 60 minutes.', incident: '1967: Wind blew radioactive dust over 1,800 miles, irradiating 500,000 people.' }
+            ];
+
+            useEffect(() => {
+                const gInt = setInterval(() => { setGlitch(true); setTimeout(() => setGlitch(false), 120); }, 4500);
+                const jInt = setInterval(() => { setJitter(true); setTimeout(() => setJitter(false), 80); }, 3000);
+                return () => { clearInterval(gInt); clearInterval(jInt); };
+            }, []);
+
+            const RadarGrid = ({ coords }) => (
+                <div className="relative w-full h-full bg-[#050505] flex items-center justify-center overflow-hidden border-2 border-white/40">
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+                    <div className="relative z-10 flex flex-col items-center">
+                        <Icon name="crosshair" size={64} className="text-white/20 animate-spin-slow" />
+                        <div className="bg-white text-black px-4 py-1 text-[12px] font-black italic animate-pulse mt-4">FIXED: {coords}</div>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent h-1/2 w-full animate-radar-sweep pointer-events-none"></div>
+                </div>
+            );
+
+            const startBoot = () => {
+                const lines = ["INIT GEZR-KERNEL...", "LOADING ENTITY FILES...", "TERMINAL READY."];
+                let i = 0;
+                const interval = setInterval(() => {
+                    setBootSequence(prev => [...prev, lines[i]]);
+                    i++;
+                    if (i === lines.length) { clearInterval(interval); setTimeout(() => setCurrentPage('home'), 800); }
+                }, 400);
+            };
+
+            if (currentPage === 'login') {
+                return (
+                    <div className="h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+                        <div className={`transition-transform duration-75 ${jitter ? 'translate-x-2' : ''}`}>
+                            <h1 className="text-8xl font-black italic mb-4">GEZR</h1>
+                            <p className="text-white/40 tracking-[0.4em] mb-10 text-xs">GLOBAL EXCLUSION ZONE REGISTRY</p>
+                            {bootSequence.length === 0 ? (
+                                <button onClick={startBoot} className="border-4 border-white px-10 py-4 hover:bg-white hover:text-black transition-all font-black text-xl">ACCESS REGISTRY</button>
+                            ) : (
+                                <div className="text-left bg-zinc-900 p-4 border-2 border-white w-64 mx-auto">
+                                    {bootSequence.map((l, i) => <div key={i} className="text-green-500 text-[10px]">{'>'} {l}</div>)}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className={`h-screen flex flex-col transition-all ${glitch ? 'skew-x-2 opacity-80' : ''}`}>
+                    <div className="vhs-texture"></div>
+                    <div className="scanline"></div>
+                    
+                    <header className="h-20 border-b-4 border-white flex items-center justify-between px-6 bg-black z-20">
+                        <div className="flex items-center gap-4">
+                            <Icon name="skull" className="text-white" />
+                            <h1 className="text-2xl font-black italic">GEZR</h1>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => setViewMode('list')} className={`px-4 py-1 text-[10px] border-2 ${viewMode === 'list' ? 'bg-white text-black' : 'border-white/20'}`}>REGISTRY</button>
+                            <button onClick={() => setViewMode('protocols')} className={`px-4 py-1 text-[10px] border-2 ${viewMode === 'protocols' ? 'bg-white text-black' : 'border-white/20'}`}>PROTOCOLS</button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 overflow-hidden flex flex-col">
+                        {viewMode === 'list' ? (
+                            currentPage === 'home' ? (
+                                <div className="p-4 space-y-4 overflow-y-auto custom-scrollbar">
+                                    {ISLANDS.map(island => (
+                                        <button key={island.id} onClick={() => { setSelectedIsland(island); setCurrentPage('dossier'); }} className="w-full text-left p-6 border-2 border-white/20 hover:border-white hover:bg-white hover:text-black transition-all group">
+                                            <div className="flex justify-between text-[10px] mb-2 font-black opacity-50"><span>{island.id}</span><span>{island.danger}</span></div>
+                                            <h3 className="text-4xl font-black italic uppercase">{island.name}</h3>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-black">
+                                    <button onClick={() => setCurrentPage('home')} className="mb-6 border border-white px-4 py-1 text-[10px] hover:bg-white hover:text-black">BACK_TO_LIST</button>
+                                    <div className="grid lg:grid-cols-2 gap-10">
+                                        <div className="aspect-square"><RadarGrid coords={selectedIsland.coords} /></div>
+                                        <div className="space-y-6">
+                                            <h2 className="text-6xl font-black italic">{selectedIsland.name}</h2>
+                                            <div className={`inline-block px-4 py-1 text-sm font-black ${DANGER_LEVELS[selectedIsland.danger].color}`}>LEVEL: {selectedIsland.danger}</div>
+                                            <p className="text-2xl font-black border-l-4 pl-4 uppercase">{selectedIsland.summary}</p>
+                                            <div className="bg-zinc-900 p-4 text-sm text-zinc-400 font-bold uppercase">{selectedIsland.detail}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        ) : (
+                            <div className="p-10 overflow-y-auto custom-scrollbar">
+                                <h2 className="text-5xl font-black italic mb-10">SYSTEM_PROTOCOLS</h2>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {Object.entries(DANGER_LEVELS).map(([k, v]) => (
+                                        <div key={k} className="border border-white/20 p-4">
+                                            <span className={`px-2 py-0.5 text-[10px] font-black ${v.color}`}>{k}</span>
+                                            <p className="mt-2 text-xs text-zinc-400 italic uppercase">{v.desc}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    <footer className="h-8 border-t-2 border-white bg-black flex items-center px-6 text-[8px] tracking-[0.4em] text-white/30">
+                        SAT_LINK: ONLINE // ENCRYPTION: AES-256 // GEZR_TERMINAL_V2
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
